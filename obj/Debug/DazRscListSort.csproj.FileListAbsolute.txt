@@ -1,0 +1,6 @@
+C:\Users\diazo\source\repos\DazRscListSort\bin\Debug\DazRscListSort.dll
+C:\Users\diazo\source\repos\DazRscListSort\bin\Debug\DazRscListSort.pdb
+C:\Users\diazo\source\repos\DazRscListSort\obj\Debug\DazRscListSort.csproj.AssemblyReference.cache
+C:\Users\diazo\source\repos\DazRscListSort\obj\Debug\DazRscListSort.csproj.CoreCompileInputs.cache
+C:\Users\diazo\source\repos\DazRscListSort\obj\Debug\DazRscListSort.dll
+C:\Users\diazo\source\repos\DazRscListSort\obj\Debug\DazRscListSort.pdb
