@@ -13,13 +13,14 @@ using Klei;
 
 namespace DazRscListSort
 {
-  
+  //Primary object of this mod, is where date is saved
     [SerializationConfig(MemberSerialization.OptIn)]
     public class DazRscListSortData : KMonoBehaviour
     {
         [Serialize]
         public int CurrentHdrButton;
         //hardcode multiple lists for serialization simplicity
+        //is DLC multple lists somehow?
         [Serialize]
         public List<Tag> Button1List;
         [Serialize]
@@ -32,159 +33,113 @@ namespace DazRscListSort
         public List<Tag> Button5List;
         public bool init = false;
         public static Dictionary<Tag, GameObject> DazRows = new Dictionary<Tag, GameObject>();
+        public static bool DazShowSortArrows = false;
 
-        public static void SyncRows(Dictionary<Tag, GameObject> KlieRows)
+        public static void SyncRows(Dictionary<Tag, GameObject> KlieRows) //called on PinnedResourcePanel.OnSpawn, this is the list of objects displayed in Pinned Resource Panel, use this reference to manipulated it, careful of race conditions
         {
-            DazRows = KlieRows;
+            DazRows = KlieRows; 
         }
         public void Initialise()
         {
-            //Debug.Log("Daz dStore init");
             if (!init)
             {
                 PinnedResourcesPanel inst = PinnedResourcesPanel.Instance;// PinnedResourcesPanel.Instance.PointerEnterActions += OnMouseEnter();
-                inst.pointerEnterActions += new KScreen.PointerEnterActions(RscOnMouseEnter);
+                //inst.pointerEnterActions += new KScreen.PointerEnterActions(RscOnMouseEnter);
                 inst.pointerExitActions += new KScreen.PointerExitActions(RscOnMouseExit);
                 init = true;
             }
         }
-        public void RscOnMouseEnter(PointerEventData data) => OnMouseOver();
-        public void RscOnMouseExit(PointerEventData data) => OnMouseExit();
 
-        public static void OnMouseOver()
+        public void OnDestroy()
         {
-            //Debug.Log("Daz mouse over execute");
-            //Debug.Log("Daz rows check"+DazRows.Count);
+            PinnedResourcesPanel inst = PinnedResourcesPanel.Instance;// PinnedResourcesPanel.Instance.PointerEnterActions += OnMouseEnter();
+            //inst.pointerEnterActions -= RscOnMouseEnter;
+            inst.pointerExitActions -= RscOnMouseExit;
+            base.OnDestroy();
+        }
+        //public void RscOnMouseEnter(PointerEventData data) => OnMouseOver(); //hook on mouseover of Pinned Resource Panel
+        public void RscOnMouseExit(PointerEventData data) => OnMouseExit(); //hook on mousexit of pinned resource panel
+
+
+        public static void ShowSortArrows() //hide value list, show sort arrows
+        {
+            DazShowSortArrows = true;
             foreach(KeyValuePair<Tag,GameObject> kvp in DazRows)
             {
-                //Debug.Log("Daz foreach start");
-                Transform tfr = kvp.Value.transform.Find("UpArrow");
+                Transform tfr = kvp.Value.transform.Find("UpArrow"); //find UpArrow game obect and show it
                 if(tfr != null)
                 {
-                    //Debug.Log("Daz foreach not null");
                     GameObject go4 = tfr.gameObject;
-                    //Debug.Log("Daz foreach not null1");
                     tfr.gameObject.SetActive(true);
-                   // Debug.Log("Daz foreach not null2");
-
                 }
-                else
-                {
-                   // Debug.Log("Daz foreach was null");
-                }
-                tfr = kvp.Value.transform.Find("DownArrow");
+                tfr = kvp.Value.transform.Find("DownArrow");//find DownArrow game obect and show it
                 if (tfr != null)
                 {
-                  //  Debug.Log("Daz foreach not null");
                     GameObject go4 = tfr.gameObject;
-                    //Debug.Log("Daz foreach not null1");
                     tfr.gameObject.SetActive(true);
-                  //  Debug.Log("Daz foreach not null2");
-
                 }
-                else
-                {
-                   // Debug.Log("Daz foreach was null");
-                }
-                tfr = kvp.Value.transform.Find("ValueLabel");
+                tfr = kvp.Value.transform.Find("ValueLabel");//find ValueLabel game obect and hide it, not this is a Klei default UI object
                 if (tfr != null)
                 {
-                   // Debug.Log("Daz foreach not null");
                     GameObject go4 = tfr.gameObject;
-                   // Debug.Log("Daz foreach not null1");
                     tfr.gameObject.SetActive(false);
-                   // Debug.Log("Daz foreach not null2");
-
                 }
-                else
-                {
-                    //Debug.Log("Daz foreach was null");
-                }
-                //ValueLabel
-                ////foreach(Transform trf in kvp.Value.transform.getch)
-                //int i2 = 0;
-                //for (int i = 0; i < kvp.Value.transform.childCount; i++)
-                //{
-                //    Debug.Log("Daz foreach2 start");
-                //    Debug.Log("Daz fe3" + kvp.Value.transform.GetChild(i).gameObject.name);
-                //    if (kvp.Value.transform.GetChild(i).gameObject.name == "UpArrow")
-                //    {
-                //        //i2 = i;
-                //        break;
-                //    }
-                //}
-                ////Debug.Log("Daz foreach end");
-                //Debug.Log("Daz find check " + (kvp.Value.transform.Find("UpArrow")==null));
-                //Transform tfrm = kvp.Value.transform.Find("UpArrow");
-                //Debug.Log("Daz step1a");
-                //RectTransform rtfrm = (RectTransform)tfrm;
-                //Debug.Log("Daz step1aa");
-                //GameObject go3 = kvp.Value.transform.GetChild(i2).gameObject;
-                //Debug.Log("Daz step1b." + i2);
-                //UpBtn ub = go3.GetComponent<UpBtn>();
-                //Debug.Log("Daz step1c");
-                //Debug.Log("Daz step1cc" + go3.name);
-                //Debug.Log("daz check " + kvp.Value.)
             }
         }
-        public static void OnMouseExit()
+        public static void HideSortArrows() //hide value list, show sort arrows
         {
-            //Debug.Log("Daz mouse leave execute");
-            //Debug.Log("Daz rows check" + DazRows.Count);
+            DazShowSortArrows = false;
             foreach (KeyValuePair<Tag, GameObject> kvp in DazRows)
             {
-                //Debug.Log("Daz foreach start");
-                Transform tfr = kvp.Value.transform.Find("UpArrow");
+                Transform tfr = kvp.Value.transform.Find("UpArrow"); //find UpArrow game obect and show it
                 if (tfr != null)
                 {
-                    //Debug.Log("Daz foreach not null");
                     GameObject go4 = tfr.gameObject;
-                   // Debug.Log("Daz foreach not null1");
                     tfr.gameObject.SetActive(false);
-                   // Debug.Log("Daz foreach not null2");
-
                 }
-                else
-                {
-                  //  Debug.Log("Daz foreach was null");
-                }
-                tfr = kvp.Value.transform.Find("DownArrow");
+                tfr = kvp.Value.transform.Find("DownArrow");//find DownArrow game obect and show it
                 if (tfr != null)
                 {
-                   // Debug.Log("Daz foreach not null");
                     GameObject go4 = tfr.gameObject;
-                   // Debug.Log("Daz foreach not null1");
                     tfr.gameObject.SetActive(false);
-                   // Debug.Log("Daz foreach not null2");
-
                 }
-                else
-                {
-                  //  Debug.Log("Daz foreach was null");
-                }
-                tfr = kvp.Value.transform.Find("ValueLabel");
+                tfr = kvp.Value.transform.Find("ValueLabel");//find ValueLabel game obect and hide it, not this is a Klei default UI object
                 if (tfr != null)
                 {
-                  //  Debug.Log("Daz foreach not null");
                     GameObject go4 = tfr.gameObject;
-                  //  Debug.Log("Daz foreach not null1");
                     tfr.gameObject.SetActive(true);
-                   // Debug.Log("Daz foreach not null2");
-
                 }
-                else
-                {
-                   // Debug.Log("Daz foreach was null");
-                }
-                //Debug.Log("Daz mouse leave execute");
-                //foreach (UpBtn uBtn in PinnedResourcesPanel.Instance.headerButton.gameObject.transform.GetComponentsInChildren<UpBtn>())
-                //{
-                //    Debug.Log("Daz mouse leave execute2");
-                //    uBtn.gameObject.SetActive(false);
-                //}
             }
         }
-        public void DumpLists()
+        public static void OnMouseExit() //show value list, hide sort arrows
+        {
+            if(!AllResourcesScreen.Instance.gameObject.activeSelf) //don't exit sort mode if All Resources screen is open
+            { 
+            DazShowSortArrows = false;
+                foreach (KeyValuePair<Tag, GameObject> kvp in DazRows)
+                {
+                    Transform tfr = kvp.Value.transform.Find("UpArrow");//find UpArrow game obect and hide it
+                    if (tfr != null)
+                    {
+                        GameObject go4 = tfr.gameObject;
+                        tfr.gameObject.SetActive(false);
+                    }
+                    tfr = kvp.Value.transform.Find("DownArrow");//find DownArrow game obect and hide it
+                    if (tfr != null)
+                    {
+                        GameObject go4 = tfr.gameObject;
+                        tfr.gameObject.SetActive(false);
+                    }
+                    tfr = kvp.Value.transform.Find("ValueLabel");//find ValueLabel game obect and show it
+                    if (tfr != null)
+                    {
+                        GameObject go4 = tfr.gameObject;
+                        tfr.gameObject.SetActive(true);
+                    }
+                }
+            }
+        }
+        public void DumpLists() //troubleshooting, dump current data structure, never called in release .dll
         {
 
                 Debug.Log("DazDump " + CurrentHdrButton);
@@ -210,7 +165,7 @@ namespace DazRscListSort
                 }
             
         }
-        public List<Tag> GetList(int num)
+        public List<Tag> GetList(int num) //get List<Tag> associated with a button, specified by passed int.
         {
             if (num == 1)
             {
@@ -254,12 +209,12 @@ namespace DazRscListSort
             }
             else
             {
-                Debug.Log("Daz Pinned Resource DataStore missing List<Tag>");
+                Debug.Log("Daz Pinned Resource DataStore missing List<Tag> for " + num);
                 return new List<Tag>();
             }
         }
 
-        public List<Tag> GetCurrentList()
+        public List<Tag> GetCurrentList() //get List<Tag> of currently selected button
         {
             if (CurrentHdrButton == 1)
             {
@@ -309,17 +264,13 @@ namespace DazRscListSort
         }
         public void ReOrdertag(Tag tg, bool Up)
         {
-            Debug.Log("Daz reorder reqesut, UP? " + Up + " tag " + tg);
-            DazStatics.hdrButtonChangeInProgress = true;
-            List<Tag> workingList = GetCurrentList();
-            //int OldTagIndex = workingList.FindIndex(tg);//findindex needs predicate?
-            int OldTagIndex = 0;
+            DazStatics.hdrButtonChangeInProgress = true; //race condition exists, lock out PinnedResoucePanel.SortRows from running on true.
+            List<Tag> workingList = GetCurrentList(); //get List<Tag> of current Header button
+            int OldTagIndex = 0; //save Index location of Tag being moved
             for (int i = 0; i < workingList.Count; i++)
             {
-                Debug.Log("Daz for loop count " + i + " and tg " + tg.ProperNameStripLink());
                 if (workingList[i] == tg)
                 {
-                    Debug.Log("Daz for loop tag found at" + i );
                     OldTagIndex = i;
                     break;
                 }
@@ -333,172 +284,67 @@ namespace DazRscListSort
                 }
 
             }
-            if (!(OldTagIndex == 0) && Up || !((OldTagIndex +1) == workingList.Count) &&!Up)
+            if (!(OldTagIndex == 0) && Up || !((OldTagIndex +1) == workingList.Count) &&!Up) //can't move top level item up, or bottom level item down, check here for that
             {
-                Debug.Log("Daz tag list before remove" + workingList.Count);
-                workingList.Remove(tg);
-                
-                //Debug.Log("Daz tag list after remove" + workingList.Count);
-                if (Up) //reinsert tag at new location
+                workingList.Remove(tg);//row needs moving, remove it from the list
+                if (Up) //reinsert tag at new location moving up
                 {
-                    //Debug.Log("Daz tag list move up" + workingList.Count + " " + (OldTagIndex - 1));
                     workingList.Insert(OldTagIndex - 1, tg);
                 }
-                else
+                else //reinsert tag at new location, moving down
                 {
-                    //Debug.Log("Daz tag list move down" + workingList.Count + " " + (OldTagIndex + 1));
                     workingList.Insert(OldTagIndex + 1, tg);
                 }
             }
-            else
-            {
-                Debug.Log("Daz can't move first item up or last itme down");
-            }
-                
-            
-            DazStatics.hdrButtonChangeInProgress = false;
-            PinnedResourcesPanel.Instance.Refresh();
+            DazStatics.hdrButtonChangeInProgress = false; //reenabled PinnedResourcePanel.SortRows
+            PinnedResourcesPanel.Instance.Refresh(); //Refresh PinnedResourcePanel for new tag sort
         }
     }
     public class HdrBtn : Button
     {
-        public int BtnNum;
-        public GameObject go;
-        DazRscListSort.DazRscListSortData dataStore;
+        //Button class for the 5 header buttons to pick current list
+        public int BtnNum; //which button are we? 1 to 5 left to right on screen
+        public GameObject go; //our parent GameObject
+        DazRscListSort.DazRscListSortData dataStore; //master dataStorage object
 
-
-        public void Setup(int num, GameObject attachedGO)
+        public void Setup(int num, GameObject attachedGO) //called on button creation by mod, not Unity built-it
         {
-
-            dataStore = ClusterManager.Instance.activeWorld.GetComponent<DazRscListSort.DazRscListSortData>();
-
-            BtnNum = num;
-            go = attachedGO;
+            dataStore = ClusterManager.Instance.activeWorld.GetComponent<DazRscListSort.DazRscListSortData>(); //get our datastorage object
+            BtnNum = num; //save our button number
+            go = attachedGO; //save our gameObject
         }
 
-        public override void OnPointerClick(PointerEventData eventData)
+        public override void OnPointerClick(PointerEventData eventData) //on click event, save data and change page
         {
-           // Debug.Log("Daz click test 1");
-            DazStatics.hdrButtonChangeInProgress = true;
-          //  Debug.Log("Daz click start" + BtnNum);
-            //DazStatics.DumpSavedLists();
+            DazStatics.hdrButtonChangeInProgress = true; //disable PinnedResourcePanel.SortRows, will corrupt data if it runs during this method.
             if (BtnNum != dataStore.CurrentHdrButton)
             {
-                DazStatics.UpdateRscList(BtnNum); //must be called before updated RscListCurrentID
-                dataStore.CurrentHdrButton = BtnNum;
+                DazStatics.UpdateRscList(BtnNum); //must be called before updated RscListCurrentID, updates our saved list for the old page before changing
+                dataStore.CurrentHdrButton = BtnNum; //change the current page
                 DazStatics.RscListRefreshHeader(); //updated header icons for new current list
             }
-          //  Debug.Log("Daz click mid " + BtnNum);
-            //DazStatics.DumpSavedLists();
-          //  Debug.Log("Daz click end " + BtnNum);
-            DazStatics.hdrButtonChangeInProgress = false;
+            DazStatics.hdrButtonChangeInProgress = false; //reenabled PinnedResourcePanel.SortRows
         }
         
     }
-
-    //public class UpBtn : KButton
-    //{
-    //    public Tag btnTag;
-    //    public GameObject go;
-
-    //    public void Setup(Tag tg, GameObject gobj)
-    //    {
-    //        Debug.Log("Daz upbtn setup 1");
-    //        btnTag = tg;
-    //        go = gobj;
-    //        //PinnedResourcesPanel.Instance.pointerEnterActions += onMouseEnter();
-    //        //PinnedResourcesPanel.Instance.OnPointerEnter() += entAct();
-    //        //PinnedResourcesPanel instance = PinnedResourcesPanel.Instance;
-    //        Debug.Log("Daz upbtn setup 2");
-    //        //onPointerEnter += OnMouseOver();
-    //        Debug.Log("Daz upbtn setup 3");
-    //        //onPointerExit += OnMouseLeave();
-    //        Debug.Log("Daz upbtn setup 4");
-    //        //onClick += OnPointerClick();
-    //        //this.closeButton.onClick += (System.Action) (() => this.Show(false));
-    //        foreach(Component co in go.GetComponents<Component>())
-    //        {
-    //            Debug.Log("Daz co check " + co.GetType());
-    //        }
-    //        onClick += (System.Action)(() => OnPointerClick());
-    //        Debug.Log("Daz upbtn setup 5");
-    //        //instance.pointerEnterActions += new KScreen.PointerEnterActions(this.OnMouseLeave);
-    //        Debug.Log("Daz stat 1 " + KInputManager.isFocused);
-    //        Debug.Log("Daz stat 2 " + (this.GetComponent<ImageToggleState>() == null));
-    //        //Debug.Log("Daz stat 3 " + this.intera);
-    //        //Debug.Log("Daz stat 4 " + KInputManager.isFocused);
-    //        //Debug.Log("Daz stat 5 " + KInputManager.isFocused);
-    //        //Debug.Log("Daz stat 6 " + KInputManager.isFocused);
-
-    //    }
-
-    //    //
-
-    //    public System.Action OnMouseOver()
-    //    {
-    //        Debug.Log("Daz mouse entered!");
-    //        go.SetActive(true);
-    //        //go.GetComponent<Image>().enabled);
-    //        //RectTransform btnTfrm = go.AddComponent<RectTransform>();
-    //        //btnTfrm.SetParent(go.transform, false); //set parent, false to use localspace
-    //        //btnTfrm.sizeDelta = new Vector2(14, 14); //resize
-    //        //btnTfrm.SetAsLastSibling(); //not 100% this is required
-    //        //btnTfrm.Translate(new Vector3(70, -200, 0)); //move button into place
-    //        //Destroy(go.GetComponent<Image>());
-    //        //Image img = go.AddComponent<Image>();
-    //        //img.sprite = Assets.GetSprite("arrow_forward");
-    //        //img.transform.rotation = Quaternion.Euler(Vector3.forward * 90);
-    //        //img.color = Color.white;
-    //        //go.GetComponent<UpBtn>().image.sprite = Assets.GetSprite("arrow_forwards");
-    //        Debug.Log("daz pos2");// + go.GetComponent<UpBtn>().isActiveAndEnabled + " " + go.GetComponent<UpBtn>().colors + go.GetComponent<UpBtn>().image + go.GetComponent<UpBtn>().IsInteractable() + go.GetComponent<UpBtn>().IsActive() + go.GetComponent<UpBtn>().spriteState);
-    //        return null;
-
-    //    }
-    //    public System.Action OnMouseLeave()
-    //    {
-    //        Debug.Log("Daz mouse leave!");
-    //        go.SetActive(false);
-    //        Debug.Log("daz pos1");
-    //        return null;
-
-    //    }
-
-    //    public void OnPointerClick()
-    //    {
-    //        Debug.Log("Daz up arrow row click ");// + btnTag);
-    //        //ClusterManager.Instance.activeWorld.GetComponent<DazRscListSort.DazRscListSortData>().ReOrdertag(btnTag, true);
-    //        //return null;
-    //    }
-    //}
     public class UpBtn : Button
     {
-        public Tag btnTag;
+        //UpArrow button on resource item in list
+        public Tag btnTag; //Tag of our resource type
 
         public void Setup(Tag tg)
         {
-            btnTag = tg;
-          //  Debug.Log("dazup btn setup");
-            //PinnedResourcesPanel instance = PinnedResourcesPanel.Instance;
-            //instance.on
-            //PinnedResourcesPanel inst = PinnedResourcesPanel.Instance;// PinnedResourcesPanel.Instance.PointerEnterActions += OnMouseEnter();
-            //inst.pointerEnterActions += new KScreen.PointerEnterActions(OnMouseEnter);
-            //this.pointerEnterActions = this.pointerEnterActions + new KScreen.PointerEnterActions(this.CheckMouseOver);
+            btnTag = tg; //save Tag of resource type, manually called by mod, not Unity
         }
-
-        //public void OnMouseEnter(PointerEventData data) => Debug.Log("Daz why did this work"); 
-        //{
-        //    Debug.Log("daz Mouse enter");
-        //    return null;
-        //}
         public override void OnPointerClick(PointerEventData eventData)
         {
-         //   Debug.Log("Daz down up row click " + btnTag);
-            ClusterManager.Instance.activeWorld.GetComponent<DazRscListSort.DazRscListSortData>().ReOrdertag(btnTag, true);
+            ClusterManager.Instance.activeWorld.GetComponent<DazRscListSort.DazRscListSortData>().ReOrdertag(btnTag, true); //call method to move this data row up on button click
         }
     }
     public class DownBtn : Button
     {
-        public Tag btnTag;
+        //DownArrow button on resource item in list
+        public Tag btnTag; //Tag of our resource type
 
         public void Setup(Tag tg)
         {
@@ -506,37 +352,46 @@ namespace DazRscListSort
         }
         public override void OnPointerClick(PointerEventData eventData)
         {
-           // Debug.Log("Daz down arrow row click " + btnTag);
-            ClusterManager.Instance.activeWorld.GetComponent<DazRscListSort.DazRscListSortData>().ReOrdertag(btnTag, false);
+            ClusterManager.Instance.activeWorld.GetComponent<DazRscListSort.DazRscListSortData>().ReOrdertag(btnTag, false); //move this resource down a row
+        }
+    }
+
+    public class SortBtn : Button
+    {
+        //Enable sort button
+        public DazRscListSortData dStore;
+        public void Setup()
+        {
+            dStore = ClusterManager.Instance.activeWorld.GetComponent<DazRscListSort.DazRscListSortData>();
+        }
+        public override void OnPointerClick(PointerEventData eventData)
+        {
+            if(!DazRscListSortData.DazShowSortArrows)
+            {
+                DazRscListSortData.ShowSortArrows();
+                DazRscListSortData.DazShowSortArrows = true;
+            }
+            else
+            {
+                DazRscListSortData.HideSortArrows();
+                DazRscListSortData.DazShowSortArrows = false;
+            }
         }
     }
     public static class DazStatics
     {
-        public static Dictionary<int, HdrBtn> hdrButtons = new Dictionary<int,HdrBtn>();
-        public static bool hdrButtonChangeInProgress = false;//apparently ONI is multithreaded and the PinnedResourcesWindow can try to update in teh middle of a button change
+        //static methods for ease of programming, these could probably be moved into DazRscSortList data storage object as non-static without issues?
+        public static Dictionary<int, HdrBtn> hdrButtons = new Dictionary<int,HdrBtn>(); //Save our header button objects for easy reference
+        public static bool hdrButtonChangeInProgress = false;//apparently ONI is multithreaded and the PinnedResourcesWindow can try to update in teh middle of a button change, if TRUE, PinnedResourcePanel.SortRows is locked out and will by bypassed to avoid conflicts
 
-        //public static void DumpSavedLists() //troubleshooting only
-        //{
-        //    foreach(KeyValuePair<int,HdrBtn> kVp in DazStatics.hdrButtons)
-        //    {
-        //        Debug.Log("Daz dump button num " + kVp.Key);
-        //        foreach(Tag tg in kVp.Value.sortedTags)
-        //        {
-        //            Debug.Log(" daz dump tag " + tg.ProperNameStripLink());
-        //        }
-        //    }
-        //    foreach(Tag tg in ClusterManager.Instance.GetWorld(ClusterManager.Instance.activeWorldId).worldInventory.pinnedResources)
-        //    {
-        //        Debug.Log(" daz dump world tag " + tg.ProperNameStripLink());
-        //    }
-        //}
         public static void UpdateRscList(int newList) //RscListCurrentID still holds old ID
         {
             //do not save current list, should already be saved when list was last updated
             //clear list, this is direct copy of PinnedResourcePanel.UnPinAll(), but that method is private so can't call it
             //rows list is private, can't access, so use our saved list as it should be the same, RscListCurrentID is still the old list, use it to remove
-            WorldInventory worldInventory = ClusterManager.Instance.GetWorld(ClusterManager.Instance.activeWorldId).worldInventory;
-            DazRscListSort.DazRscListSortData dataStore = ClusterManager.Instance.activeWorld.GetComponent<DazRscListSort.DazRscListSortData>();
+            //note that we need to remove Tags not in pinned list, but in New Discoveries list from this button's List<Tag> before saving
+            WorldInventory worldInventory = ClusterManager.Instance.GetWorld(ClusterManager.Instance.activeWorldId).worldInventory; //get the current game data
+            DazRscListSort.DazRscListSortData dataStore = ClusterManager.Instance.activeWorld.GetComponent<DazRscListSort.DazRscListSortData>(); //get this mods datastorage object
             List<Tag> newItems = new List<Tag>(); //don't want to save items tagged New, but can't remove while inside foreach
             foreach (Tag tg in dataStore.GetList(dataStore.CurrentHdrButton))
             {
@@ -544,289 +399,237 @@ namespace DazRscListSort
                 {
                     newItems.Add(tg);
                 }
-                worldInventory.pinnedResources.Remove(tg);
-                
-                //Debug.Log("Daz remove " + DazStatics.hdrButtons[1].CurrentBtnNum + tg.ProperName());
+                worldInventory.pinnedResources.Remove(tg);//remove items tagged new from saved button list, does NOT remove them for Klei's new discoveries list so you can change buttons to add a new resource to a different page
             }
             foreach(Tag tg in newItems)
             {
                 dataStore.GetList(dataStore.CurrentHdrButton).Remove(tg); //remove items tagged new from saved list
             }
-
-            //add items from new list
-            foreach (Tag tg in dataStore.GetList(newList))
+            foreach (Tag tg in dataStore.GetList(newList)) //add saved tags from our new pages saved List<Tag>.
             {
                 worldInventory.pinnedResources.Add(tg);
-                //Debug.Log("Daz add " + newList + tg.ProperName());
             }
-            //RscListCurrentID = newList; update current button back in OnClick now
-            PinnedResourcesPanel.Instance.Refresh();
+            PinnedResourcesPanel.Instance.Refresh(); //refresh the PinnedResourcesPanel for the new list of items.
         }
 
-        public static void RscListRefreshHeader() //refresh header button colors
+        public static void RscListRefreshHeader() //refresh header button colors after page change
         {
             foreach(int i in DazStatics.hdrButtons.Keys)
             {
                 if(DazStatics.hdrButtons[i].BtnNum == ClusterManager.Instance.activeWorld.GetComponent<DazRscListSort.DazRscListSortData>().CurrentHdrButton)
                 {
-                    //set color green
-                    Image btnImg = DazStatics.hdrButtons[i].GetComponent<Image>();
+                    Image btnImg = DazStatics.hdrButtons[i].GetComponent<Image>();//set color green
                     btnImg.color = Color.green;
-
-                    
                 }
                 else
                 {
-                    //set color gray
-                    Image btnImg = DazStatics.hdrButtons[i].GetComponent<Image>();
+                    Image btnImg = DazStatics.hdrButtons[i].GetComponent<Image>(); //set color gray
                     btnImg.color = Color.gray;
                 }
             }
         }
         public static List<Tag> SortRscList(List<Tag> OldList, Dictionary<Tag, GameObject> rows) //primary work done here, compare list and sort, call from PinnedResourceList with Harmony
         {
-            //Debug.Log("Daz sort list 1");
+            //Note this method REPLACES PinnedResourceWindow.SortRows in it's entirety, make sure it still does all the default Klei functions.
             List<Tag> ReturnList = new List<Tag>(); //have to add the inactive items back into list at end, so instatiate an object to modify and return
             if (DazStatics.hdrButtons.ContainsKey(1) && (DazStatics.hdrButtonChangeInProgress==false)) //race condition check, this method can run before buttons instantiate so skip if buttons don't exist yet
                 //also skip if button change in progress so that doesn't screw data up
             {
-                //Debug.Log("Daz sort list 2");
                 List<Tag> OldListActive = new List<Tag>();
-                foreach (KeyValuePair<Tag, GameObject> row in rows)
+                foreach (KeyValuePair<Tag, GameObject> row in rows) //we only need to sort objects actively being displayed, there seems to be no destruction routine for objects that were shown and hidden and they stay around until game load.
                 {
-                    if (row.Value.activeSelf)
+                    if (row.Value.activeSelf) //is resource displayed?
                     {
                         OldListActive.Add(row.Key); //make list of active only objects
                     }
                 }
-                DazRscListSort.DazRscListSortData dataStore = ClusterManager.Instance.activeWorld.GetComponent<DazRscListSort.DazRscListSortData>();
+                DazRscListSort.DazRscListSortData dataStore = ClusterManager.Instance.activeWorld.GetComponent<DazRscListSort.DazRscListSortData>(); //get this mod's datastore
                 List<Tag> toRemove = new List<Tag>();
                 foreach (Tag tag in dataStore.GetList(dataStore.CurrentHdrButton)) //check nothing has been removed from list
                 {
                     if (!OldListActive.Contains(tag)) //removed item so...
                     {
-                        //DazStatics.RscListCollection[DazStatics.RscListCurrentID].Remove(tag); //remove from saved list, this line is crash error, can't edit list being enumerated
+                        //DazStatics.RscListCollection[DazStatics.RscListCurrentID].Remove(tag); //remove from saved list, this line is crash error, can't edit list being enumerated so use toRemove
                         toRemove.Add(tag); //save tags to remove
                     }
                 }
                 foreach (Tag tg in toRemove) //remove tags
                 {
                     dataStore.GetList(dataStore.CurrentHdrButton).Remove(tg);
-                    //Debug.Log("Daz remove item my list" + tg.ProperName());
                 }
 
-                foreach (Tag tag in OldListActive) //check list to see if anythign new added
+                foreach (Tag tag in OldListActive) //check list to see if anythign new added to Klei's list.
                 {
-                    if (!dataStore.GetList(dataStore.CurrentHdrButton).Contains(tag)) //missing tag from saved list
+                    if (!dataStore.GetList(dataStore.CurrentHdrButton).Contains(tag)) //missing tag from saved list in mod
                     {
                         dataStore.GetList(dataStore.CurrentHdrButton).Add(tag); //add tag to end of list
-                       // Debug.Log("Daz add item my list" + tag.ProperName());
                     }
                 }
                 foreach (Tag tg in dataStore.GetList(dataStore.CurrentHdrButton)) //active items at start of returned list
                 {
-                    ReturnList.Add(tg);
-                    SetupUpArrowButton(rows[tg], tg);
-                    SetupDownArrowButton(rows[tg], tg);
+                    ReturnList.Add(tg); //add items in sorted order to ReturnList
+                    SetupUpArrowButton(rows[tg], tg); //check for, and add up arrow if needed
+                    SetupDownArrowButton(rows[tg], tg); //check for, and add down arrow if needed
                 }
-                foreach (Tag tg in OldList) //add inactive items
+                foreach (Tag tg in OldList) //add inactive items for compatibility so list passed to mod and list mod passes back for display contain the same items, if in a different order
                 {
                     if (!ReturnList.Contains(tg))
                     {
                         ReturnList.Add(tg);
                     }
                 }
-                //Debug.Log("Daz sort list 3");
             }
 
-            else
+            else //method had to be bypassed, most likely due to header button change in progress (see if statement)
             {
-                //Debug.Log("Daz sort fail, return same list");
                 ReturnList = OldList;
             }
-            //Debug.Log("Daz sort list end");
             return ReturnList;
         }
-
-       
-        public static void SetupButton(GameObject parent, int btnnum, int posOffset)
+        public static void SetupButton(GameObject parent, int btnnum, int posOffset) //create header buttons for page switching
         {
-            if (!DazStatics.hdrButtons.ContainsKey(btnnum) || DazStatics.hdrButtons.ContainsKey(btnnum) && DazStatics.hdrButtons[btnnum] == null)
+            if (!DazStatics.hdrButtons.ContainsKey(btnnum) || DazStatics.hdrButtons.ContainsKey(btnnum) && DazStatics.hdrButtons[btnnum] == null) //error check, this should always return TRUE as it runs in PinnedResrouceWindow.OnSpawn
             {
-                
                 GameObject btn = new GameObject("RscList" + btnnum, typeof(RectTransform), typeof(KLayoutElement), typeof(HdrBtn), typeof(Image)); //make base gameobject
                 RectTransform btnTfrm = btn.GetComponent<RectTransform>(); //rectTransform for UI layer
                 btnTfrm.SetParent(parent.transform, false); //set parent, false to use localspace
                 btn.GetComponent<KLayoutElement>().ignoreLayout = true; //not part of layout group
                 HdrBtn btnImg = btn.GetComponent<HdrBtn>(); //setup the button
-                btnImg.Setup(btnnum, btn);
+                btnImg.Setup(btnnum, btn); //call Setup in button class, pass this button's number and the HdrBtn object
                 btnTfrm.sizeDelta = new Vector2(12, 12); //resize
                 btnTfrm.SetAsLastSibling(); //not 100% this is required
                 btnTfrm.Translate(new Vector3(posOffset, 0, 0)); //move button into place
-                if (!DazStatics.hdrButtons.ContainsKey(btnnum))
+                if (!DazStatics.hdrButtons.ContainsKey(btnnum)) //error check, this should alwasy return true and run first statement
                 {
                     DazStatics.hdrButtons.Add(btnnum, btnImg);
-                    Debug.Log("Daz full button instantiate " + btnnum);
                 }
-                else if (DazStatics.hdrButtons.ContainsKey(btnnum) && DazStatics.hdrButtons[btnnum] == null)
+                else if (DazStatics.hdrButtons.ContainsKey(btnnum) && DazStatics.hdrButtons[btnnum] == null) //might run on game reload?
                 {
                     DazStatics.hdrButtons[btnnum] = btnImg;
-                    Debug.Log("Daz partial button instantiate " + btnnum);
                 }
-                else
+                else //also might hit this on game reload, but button still exists so no problem
                 {
-                    Debug.Log("Daz button instantiate fallthrough " + btnnum);
                 }
             }
-            else
-            {
-//              Debug.Log("Daz button already exists " + btnnum);
-            }
-
         }
-        public static void SetupUpArrowButton(GameObject parent, Tag tg)
+        public static void SetupSortButton(GameObject parent, int posOffset) //create header buttons for page switching
         {
-            //Debug.Log("Daz uparrow setup 1");
-            if (parent.transform.Find("UpArrow")== null)
+            if (parent.FindComponent<SortBtn>() == null)
             {
-                //Debug.Log("Daz uparrow setup 1a");
+                GameObject btn = new GameObject("SortListBtn", typeof(RectTransform), typeof(KLayoutElement), typeof(SortBtn), typeof(Image)); //make base gameobject
+                RectTransform btnTfrm = btn.GetComponent<RectTransform>(); //rectTransform for UI layer
+                btnTfrm.SetParent(parent.transform, false); //set parent, false to use localspace
+                btn.GetComponent<KLayoutElement>().ignoreLayout = true; //not part of layout group
+                SortBtn btnImg = btn.GetComponent<SortBtn>(); //setup the button
+                btnImg.Setup(); //call Setup in button class, pass this button's number and the HdrBtn object
+                btnTfrm.sizeDelta = new Vector2(12, 12); //resize
+                btnTfrm.SetAsLastSibling(); //not 100% this is required
+                btnTfrm.Translate(new Vector3(posOffset, 0, 0)); //move button into place
+                Image img = btn.GetComponent<Image>();
+                img.sprite = Assets.GetSprite("OverviewUI_priority_icon");
+                //img.transform.rotation = Quaternion.Euler(Vector3.forward * 90);
+                img.color = Color.white;
+            }
+            
+        }
+        public static void SetupUpArrowButton(GameObject parent, Tag tg) //create Up arrow button on each resource item in list
+        {
+            if (parent.transform.Find("UpArrow")== null) //this will be FALSE most of the time, this button creation method is called every second, only need to create button if it does not exist
+            {
                 GameObject btn = new GameObject("UpArrow", typeof(RectTransform), typeof(KLayoutElement), typeof(UpBtn), typeof(Image)); //make base gameobject
                 RectTransform btnTfrm = btn.GetComponent<RectTransform>(); //rectTransform for UI layer
                 btnTfrm.SetParent(parent.transform, false); //set parent, false to use localspace
-               // Debug.Log("daz check ua " + btnTfrm.gameObject.name);
                 btn.GetComponent<KLayoutElement>().ignoreLayout = true; //not part of layout group
                 UpBtn btnImg = btn.GetComponent<UpBtn>(); //setup the button
-                btnImg.Setup(tg);
+                btnImg.Setup(tg); //pass TAG of resource this UpArrow is attached to
                 btnTfrm.sizeDelta = new Vector2(14, 14); //resize
                 btnTfrm.SetAsLastSibling(); //not 100% this is required
                 btnTfrm.Translate(new Vector3(70, 0, 0)); //move button into place
                 Image img = btn.GetComponent<Image>();
-                //img.sprite = Assets.GetSprite("icon_priority_down");
                 img.sprite = Assets.GetSprite("arrow_forward");
                 img.transform.rotation = Quaternion.Euler(Vector3.forward * 90);
                 img.color = Color.white;
-
-               // Debug.Log("daz check u2a " + btnTfrm.gameObject.name);
-               // Debug.Log("Daz uparrow setup 2");
-
+                if(!DazRscListSortData.DazShowSortArrows)
+                {
+                    btn.SetActive(false);
+                }
             }
-            else
-            {
-               //Debug.Log("Daz upArrow button already exists ");
-            }
-
         }
-        public static void SetupDownArrowButton(GameObject parent, Tag tg)
+        public static void SetupDownArrowButton(GameObject parent, Tag tg)//create Down arrow button on each resource item in list
         {
-            if (parent.transform.Find("DownArrow") == null)
+            if (parent.transform.Find("DownArrow") == null)//this will be FALSE most of the time, this button creation method is called every second, only need to create button if it does not exist
             {
-               // Debug.Log("Daz downarrow setup 1");
                 GameObject btn = new GameObject("DownArrow", typeof(RectTransform), typeof(KLayoutElement), typeof(DownBtn), typeof(Image)); //make base gameobject
                 RectTransform btnTfrm = btn.GetComponent<RectTransform>(); //rectTransform for UI layer
                 btnTfrm.SetParent(parent.transform, false); //set parent, false to use localspace
                 btn.GetComponent<KLayoutElement>().ignoreLayout = true; //not part of layout group
                 DownBtn btnImg = btn.GetComponent<DownBtn>(); //setup the button
-                btnImg.Setup(tg);
+                btnImg.Setup(tg); //pass TAG of this resource list item
                 btnTfrm.sizeDelta = new Vector2(14, 14); //resize
                 btnTfrm.SetAsLastSibling(); //not 100% this is required
                 btnTfrm.Translate(new Vector3(90, 0, 0)); //move button into place
                 Image img = btn.GetComponent<Image>();
-                //img.sprite = Assets.GetSprite("icon_priority_down");
                 img.sprite = Assets.GetSprite("arrow_forward");
                 img.transform.rotation = Quaternion.Euler(Vector3.forward * -90);
                 img.color = Color.white;
-               // Debug.Log("Daz downarrow setup 2");
-
+                if (!DazRscListSortData.DazShowSortArrows)
+                {
+                    btn.SetActive(false);
+                }
             }
-            else
-            {
-
-               // Debug.Log("Daz downArrow button already exists ");
-            }
-
         }
     }
 
-    public class DazPatches : UserMod2
+    public class DazPatches : UserMod2 //mod loading class
     {
-        //[SerializationConfig(MemberSerialization.OptIn)]
-        //public class DazDataTest2 : KMonoBehaviour
-        //{
-        //    [Serialize]
-        //    public int testNum;
-        //}
-
         [HarmonyPatch(typeof(WorldInventory), "OnPrefabInit")]
         public static class WorldInventory_OnPrefabInit_Patch
         {
-            /// <summary>
-            /// Applied after OnPrefabInit runs.
-            /// </summary>
+           
+            //add our primary data storage object, needs to happen here so it exists in game world at load time, UI objects are created after game load.
             internal static void Postfix(WorldInventory __instance)
             {
-                //Debug.Log("daz test added");
-                DazRscListSort.DazRscListSortData dStore = __instance.gameObject.AddOrGet<DazRscListSort.DazRscListSortData>();
-                //dStore.Initialise();
-          
+                DazRscListSort.DazRscListSortData dStore = __instance.gameObject.AddOrGet<DazRscListSort.DazRscListSortData>(); //looks like WorldInventory is destroyed when game ends and return to Main Menu, so starting a new game instantiates a new instance of DazRscListSortData without having to code resetting to defaults on return to Main Menu
             }
         }
+
         public override void OnLoad(Harmony harmony)
         {
-            base.OnLoad(harmony);
-            //Debug.Log("Daz Yay, working!");
-            //SaveGame.Instance.FindOrAddComponent<DazRscListSortData>();
-            //ebug.Log("Daz Yay, component added!");
-
+            base.OnLoad(harmony); //tell ONI my mod exists
         }
-
-        //[HarmonyPatch(typeof(MainMenu))]
-        //[HarmonyPatch("OnPrefabInit")]
-        //public class MainMenuInit
-        //{
-        //    public static void Postfix()
-        //    {
-        //        Debug.Log("Daz main menu init");
-        //        Debug.Log("daz check " + PinnedResourcesPanel.Instance.name);
-        //    }
-        //}
 
         [HarmonyPatch(typeof(PinnedResourcesPanel))]
         [HarmonyPatch("OnSpawn")]
         public class PinnedRscPanelPatchOnSpawn
         {
+            //hook PinnedResourcePanel for the UI objects being added.
+            //use PostFix as no changes to panel, just adding stuff
             public static void Postfix(Dictionary<Tag, GameObject> ___rows)
             {
-                //Debug.Log("Daz onspawn setup 1");
-                DazStatics.SetupButton(PinnedResourcesPanel.Instance.headerButton.gameObject, 1, 55);
+                DazStatics.SetupButton(PinnedResourcesPanel.Instance.headerButton.gameObject, 1, 55); //setup the 5 Page buttons on the header
                 DazStatics.SetupButton(PinnedResourcesPanel.Instance.headerButton.gameObject, 2, 71);
                 DazStatics.SetupButton(PinnedResourcesPanel.Instance.headerButton.gameObject, 3, 87);
                 DazStatics.SetupButton(PinnedResourcesPanel.Instance.headerButton.gameObject, 4, 103);
                 DazStatics.SetupButton(PinnedResourcesPanel.Instance.headerButton.gameObject, 5, 119);
-                //Debug.Log("Daz onspawn setup 2");
-                if (ClusterManager.Instance.activeWorld.GetComponent<DazRscListSort.DazRscListSortData>().CurrentHdrButton==0)
+                DazStatics.SetupSortButton(PinnedResourcesPanel.Instance.headerButton.gameObject, 35);
+                if (ClusterManager.Instance.activeWorld.GetComponent<DazRscListSort.DazRscListSortData>().CurrentHdrButton==0) //this will only be hit the first time the mod is loaded into a game, so set to first page, otherwise last display page will populate this field on game load, use that if present.
                 {
                     ClusterManager.Instance.activeWorld.GetComponent<DazRscListSort.DazRscListSortData>().CurrentHdrButton = 1;
                 }
-                ClusterManager.Instance.activeWorld.GetComponent<DazRscListSort.DazRscListSortData>().Initialise();
-                //Debug.Log("Daz onspawn setup 3");
-                DazStatics.RscListRefreshHeader();
-                //Debug.Log("Daz onspawn setup 4");
-                DazRscListSortData.SyncRows(___rows);
+                ClusterManager.Instance.activeWorld.GetComponent<DazRscListSort.DazRscListSortData>().Initialise(); //call primary data object for setup
+                DazStatics.RscListRefreshHeader(); //now have loaded, refresh button colors
+                DazRscListSortData.SyncRows(___rows); //link rows object to primary data store
             }
-
-            
         }
-
-
         [HarmonyPatch(typeof(PinnedResourcesPanel))]
         [HarmonyPatch("SortRows")]
         public class PinnedRscPanelPatchSortRows
         {
+            //primary worker method of the mod, this is called every 1000ms by Klei, note total replacement required until I can figure out a Transpiler
             public static bool Prefix(PinnedResourcesPanel __instance, Dictionary<Tag, GameObject> ___rows)
             {
                 //in theory a transpiler replace the one line needed should be used, i lack the skills to do so, copy-paste entire method as a workaround
                 //start Klei code
-               // Debug.Log("Daz native sortrwos 1");
                 List<Tag> tagList = new List<Tag>(); //all items in ___rows
                 foreach (KeyValuePair<Tag, GameObject> row in ___rows)
                 {
@@ -836,19 +639,15 @@ namespace DazRscListSort
                 //below line is all i need to replace
                 //tagList.Sort((Comparison<Tag>)((a, b) => a.ProperNameStripLink().CompareTo(b.ProperNameStripLink())));
                 //replace with my code, want to make this a transpiler?
-                //Debug.Log("Daz native sortrwos 21");
-                //List<Tag> passList = new List<Tag>(); //taglist being modified in other thread?
                 List<Tag> RetList = DazStatics.SortRscList(tagList, ___rows); //need to modify order of tagList obejct without changing object name so below code doesn't need modification.
-                //RetList; //can't pass a list by ref or out? workaround
-                //resume Klei code
-               // Debug.Log("Daz native sortrwos 3");
+                //RetList; //can't pass a list by ref or out? workaround with this
+                //resume Klei code, using RetList instead of taglist
                 foreach (Tag key in RetList)
                 {
                     ___rows[key].transform.SetAsLastSibling();
                 }
                 PinnedResourcesPanel.Instance.clearNewButton.transform.SetAsLastSibling();
                 PinnedResourcesPanel.Instance.seeAllButton.transform.SetAsLastSibling();
-               // Debug.Log("Daz native sortrwos 4");
                 //end of method, bypass original method with next line
                 return false;
             }
