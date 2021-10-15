@@ -35,6 +35,7 @@ namespace DazRscListSort
         public static Dictionary<Tag, GameObject> DazRows = new Dictionary<Tag, GameObject>();
         public static bool DazShowSortArrows = false;
 
+
         public static void SyncRows(Dictionary<Tag, GameObject> KlieRows) //called on PinnedResourcePanel.OnSpawn, this is the list of objects displayed in Pinned Resource Panel, use this reference to manipulated it, careful of race conditions
         {
             DazRows = KlieRows; 
@@ -45,7 +46,7 @@ namespace DazRscListSort
             {
                 PinnedResourcesPanel inst = PinnedResourcesPanel.Instance;// PinnedResourcesPanel.Instance.PointerEnterActions += OnMouseEnter();
                 //inst.pointerEnterActions += new KScreen.PointerEnterActions(RscOnMouseEnter);
-                inst.pointerExitActions += new KScreen.PointerExitActions(RscOnMouseExit);
+                //inst.pointerExitActions += new KScreen.PointerExitActions(RscOnMouseExit);
                 init = true;
             }
         }
@@ -54,11 +55,11 @@ namespace DazRscListSort
         {
             PinnedResourcesPanel inst = PinnedResourcesPanel.Instance;// PinnedResourcesPanel.Instance.PointerEnterActions += OnMouseEnter();
             //inst.pointerEnterActions -= RscOnMouseEnter;
-            inst.pointerExitActions -= RscOnMouseExit;
+            //inst.pointerExitActions -= RscOnMouseExit;
             base.OnDestroy();
         }
         //public void RscOnMouseEnter(PointerEventData data) => OnMouseOver(); //hook on mouseover of Pinned Resource Panel
-        public void RscOnMouseExit(PointerEventData data) => OnMouseExit(); //hook on mousexit of pinned resource panel
+        //public void RscOnMouseExit(PointerEventData data) => OnMouseExit(); //hook on mousexit of pinned resource panel //last patch added gap between headed and rows that triggers this
 
 
         public static void ShowSortArrows() //hide value list, show sort arrows
@@ -69,19 +70,19 @@ namespace DazRscListSort
                 Transform tfr = kvp.Value.transform.Find("UpArrow"); //find UpArrow game obect and show it
                 if(tfr != null)
                 {
-                    GameObject go4 = tfr.gameObject;
+                    //GameObject go4 = tfr.gameObject;
                     tfr.gameObject.SetActive(true);
                 }
                 tfr = kvp.Value.transform.Find("DownArrow");//find DownArrow game obect and show it
                 if (tfr != null)
                 {
-                    GameObject go4 = tfr.gameObject;
+                    //GameObject go4 = tfr.gameObject;
                     tfr.gameObject.SetActive(true);
                 }
                 tfr = kvp.Value.transform.Find("ValueLabel");//find ValueLabel game obect and hide it, not this is a Klei default UI object
                 if (tfr != null)
                 {
-                    GameObject go4 = tfr.gameObject;
+                    //GameObject go4 = tfr.gameObject;
                     tfr.gameObject.SetActive(false);
                 }
             }
@@ -94,51 +95,51 @@ namespace DazRscListSort
                 Transform tfr = kvp.Value.transform.Find("UpArrow"); //find UpArrow game obect and show it
                 if (tfr != null)
                 {
-                    GameObject go4 = tfr.gameObject;
+                    //GameObject go4 = tfr.gameObject;
                     tfr.gameObject.SetActive(false);
                 }
                 tfr = kvp.Value.transform.Find("DownArrow");//find DownArrow game obect and show it
                 if (tfr != null)
                 {
-                    GameObject go4 = tfr.gameObject;
+                    //GameObject go4 = tfr.gameObject;
                     tfr.gameObject.SetActive(false);
                 }
                 tfr = kvp.Value.transform.Find("ValueLabel");//find ValueLabel game obect and hide it, not this is a Klei default UI object
                 if (tfr != null)
                 {
-                    GameObject go4 = tfr.gameObject;
+                    //GameObject go4 = tfr.gameObject;
                     tfr.gameObject.SetActive(true);
                 }
             }
         }
-        public static void OnMouseExit() //show value list, hide sort arrows
-        {
-            if(!AllResourcesScreen.Instance.gameObject.activeSelf) //don't exit sort mode if All Resources screen is open
-            { 
-            DazShowSortArrows = false;
-                foreach (KeyValuePair<Tag, GameObject> kvp in DazRows)
-                {
-                    Transform tfr = kvp.Value.transform.Find("UpArrow");//find UpArrow game obect and hide it
-                    if (tfr != null)
-                    {
-                        GameObject go4 = tfr.gameObject;
-                        tfr.gameObject.SetActive(false);
-                    }
-                    tfr = kvp.Value.transform.Find("DownArrow");//find DownArrow game obect and hide it
-                    if (tfr != null)
-                    {
-                        GameObject go4 = tfr.gameObject;
-                        tfr.gameObject.SetActive(false);
-                    }
-                    tfr = kvp.Value.transform.Find("ValueLabel");//find ValueLabel game obect and show it
-                    if (tfr != null)
-                    {
-                        GameObject go4 = tfr.gameObject;
-                        tfr.gameObject.SetActive(true);
-                    }
-                }
-            }
-        }
+        //public static void OnMouseExit() //show value list, hide sort arrows
+        //{
+        //    if(!AllResourcesScreen.Instance.gameObject.activeSelf) //don't exit sort mode if All Resources screen is open
+        //    { 
+        //    DazShowSortArrows = false;
+        //        foreach (KeyValuePair<Tag, GameObject> kvp in DazRows)
+        //        {
+        //            Transform tfr = kvp.Value.transform.Find("UpArrow");//find UpArrow game obect and hide it
+        //            if (tfr != null)
+        //            {
+        //                GameObject go4 = tfr.gameObject;
+        //                tfr.gameObject.SetActive(false);
+        //            }
+        //            tfr = kvp.Value.transform.Find("DownArrow");//find DownArrow game obect and hide it
+        //            if (tfr != null)
+        //            {
+        //                GameObject go4 = tfr.gameObject;
+        //                tfr.gameObject.SetActive(false);
+        //            }
+        //            tfr = kvp.Value.transform.Find("ValueLabel");//find ValueLabel game obect and show it
+        //            if (tfr != null)
+        //            {
+        //                GameObject go4 = tfr.gameObject;
+        //                tfr.gameObject.SetActive(true);
+        //            }
+        //        }
+        //    }
+        //}
         public void DumpLists() //troubleshooting, dump current data structure, never called in release .dll
         {
 
@@ -602,10 +603,12 @@ namespace DazRscListSort
         [HarmonyPatch("OnSpawn")]
         public class PinnedRscPanelPatchOnSpawn
         {
+            
             //hook PinnedResourcePanel for the UI objects being added.
             //use PostFix as no changes to panel, just adding stuff
             public static void Postfix(Dictionary<Tag, GameObject> ___rows)
             {
+                Debug.Log("Daz pinned rez onspawn");
                 DazStatics.SetupButton(PinnedResourcesPanel.Instance.headerButton.gameObject, 1, 55); //setup the 5 Page buttons on the header
                 DazStatics.SetupButton(PinnedResourcesPanel.Instance.headerButton.gameObject, 2, 71);
                 DazStatics.SetupButton(PinnedResourcesPanel.Instance.headerButton.gameObject, 3, 87);
