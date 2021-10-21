@@ -9,6 +9,7 @@ using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
+
 namespace DazRscListSort
 {
     //Primary object of this mod, is where date is saved
@@ -48,27 +49,41 @@ namespace DazRscListSort
         public bool Button4OverRide = false;
         [Serialize]
         public bool Button5OverRide = false;
+        [Serialize]
         public bool init = false;
         //public static Dictionary<Tag, GameObject> DazRows = new Dictionary<Tag, GameObject>();
         //public static bool DazShowSortArrows = false;
         [Serialize]
-        public int WorldID = 0;
+        public int WorldID;
 
 
         //public static void SyncRows(Dictionary<Tag, GameObject> KlieRows) //called on PinnedResourcePanel.OnSpawn, this is the list of objects displayed in Pinned Resource Panel, use this reference to manipulated it, careful of race conditions
         //{
         //    DazRows = KlieRows; 
         //}
-        public void Initialise()
+
+        public void Initialise(int worldID)
         {
-            Debug.Log(init);
-            Debug.Log("Daz Datastorage Initialize");
             if (!init)
             {
                 //PinnedResourcesPanel inst = PinnedResourcesPanel.Instance;// PinnedResourcesPanel.Instance.PointerEnterActions += OnMouseEnter();
                 //inst.pointerEnterActions += new KScreen.PointerEnterActions(RscOnMouseEnter);
                 //inst.pointerExitActions += new KScreen.PointerExitActions(RscOnMouseExit);
-                WorldID = ClusterManager.Instance.GetMyWorldId();
+                WorldID = this.GetComponent<WorldContainer>().id;
+                CurrentHdrButton = 1;
+                Button1List = new List<Tag>();
+                Button2List = new List<Tag>();
+                Button3List = new List<Tag>();
+                Button4List = new List<Tag>();
+                Button5List = new List<Tag>();
+                if(WorldID == 0)
+                {
+                    Button1ListOverRide = new List<Tag>();
+                    Button2ListOverRide = new List<Tag>();
+                    Button3ListOverRide = new List<Tag>();
+                    Button4ListOverRide = new List<Tag>();
+                    Button5ListOverRide = new List<Tag>();
+                }
                 init = true;
             }
         }
@@ -91,133 +106,20 @@ namespace DazRscListSort
         }
         public void OnDestroy()
         {
-            //PinnedResourcesPanel inst = PinnedResourcesPanel.Instance;// PinnedResourcesPanel.Instance.PointerEnterActions += OnMouseEnter();
-            //inst.pointerEnterActions -= RscOnMouseEnter;
-            //inst.pointerExitActions -= RscOnMouseExit;
             base.OnDestroy();
         }
-        //public void RscOnMouseEnter(PointerEventData data) => OnMouseOver(); //hook on mouseover of Pinned Resource Panel
-        //public void RscOnMouseExit(PointerEventData data) => OnMouseExit(); //hook on mousexit of pinned resource panel //last patch added gap between headed and rows that triggers this
 
-
-
-        
-        //public static void OnMouseExit() //show value list, hide sort arrows
-        //{
-        //    if(!AllResourcesScreen.Instance.gameObject.activeSelf) //don't exit sort mode if All Resources screen is open
-        //    { 
-        //    DazShowSortArrows = false;
-        //        foreach (KeyValuePair<Tag, GameObject> kvp in DazRows)
-        //        {
-        //            Transform tfr = kvp.Value.transform.Find("UpArrow");//find UpArrow game obect and hide it
-        //            if (tfr != null)
-        //            {
-        //                GameObject go4 = tfr.gameObject;
-        //                tfr.gameObject.SetActive(false);
-        //            }
-        //            tfr = kvp.Value.transform.Find("DownArrow");//find DownArrow game obect and hide it
-        //            if (tfr != null)
-        //            {
-        //                GameObject go4 = tfr.gameObject;
-        //                tfr.gameObject.SetActive(false);
-        //            }
-        //            tfr = kvp.Value.transform.Find("ValueLabel");//find ValueLabel game obect and show it
-        //            if (tfr != null)
-        //            {
-        //                GameObject go4 = tfr.gameObject;
-        //                tfr.gameObject.SetActive(true);
-        //            }
-        //        }
-        //    }
-        //}
-        public void DumpLists() //troubleshooting, dump current data structure, never called in release .dll
-        {
-
-                Debug.Log("DazDump " + CurrentHdrButton);
-                foreach (Tag tg in Button1List)
-                {
-                    Debug.Log("DazDump1 " + tg.ProperNameStripLink());
-                }
-                foreach (Tag tg in Button2List)
-                {
-                    Debug.Log("DazDump2 " + tg.ProperNameStripLink());
-                }
-                foreach (Tag tg in Button3List)
-                {
-                    Debug.Log("DazDump3 " + tg.ProperNameStripLink());
-                }
-                foreach (Tag tg in Button4List)
-                {
-                    Debug.Log("DazDump4 " + tg.ProperNameStripLink());
-                }
-                foreach (Tag tg in Button5List)
-                {
-                    Debug.Log("DazDump5 " + tg.ProperNameStripLink());
-                }
-            
-        }
-        public bool GetButtonState(int btnNum)
-        {
-            if (btnNum == 1)
-            {
-                return Button1OverRide;
-            }
-           else if (btnNum == 2)
-            {
-                return Button2OverRide;
-            }
-            else if (btnNum == 3)
-            {
-                return Button3OverRide;
-            }
-            else if (btnNum == 4)
-            {
-                return Button4OverRide;
-            }
-            else if  (btnNum == 5)
-            {
-                return Button5OverRide;
-            }
-            else
-            {
-                return false;
-            }
-        }
-
-        public void SetButtonState(int btnNum, bool state)
-        {
-            if (btnNum == 1)
-            {
-                Button1OverRide = state;
-            }
-            else if (btnNum == 2)
-            {
-                Button2OverRide = state;
-            }
-            else if (btnNum == 3)
-            {
-                Button3OverRide = state;
-            }
-            else if (btnNum == 4)
-            {
-                Button4OverRide = state;
-            }
-            else if (btnNum == 5)
-            {
-                Button5OverRide = state;
-            }
-
-        }
         public List<Tag> GetList(int num) //get List<Tag> associated with a button, specified by passed int.
         {
             if (num == 0)
             {
                 Debug.Log("Daz Pinned Resource List looking for list 0, reset to list 1");
                 CurrentHdrButton = 1;
+                num = 1;
             }
             if (num == 1)
             {
-                if (Button1OverRide)
+                if (DazStatics.baseDstore.Button1OverRide)
                 {
                     if (DazStatics.baseDstore.Button1ListOverRide == null)
                     {
@@ -236,7 +138,7 @@ namespace DazRscListSort
             }
             else if (num == 2)
             {
-                if (Button2OverRide)
+                if (DazStatics.baseDstore.Button2OverRide)
                 {
                     if (DazStatics.baseDstore.Button2ListOverRide == null)
                     {
@@ -255,7 +157,7 @@ namespace DazRscListSort
             }
             else if (num == 3)
             {
-                if (Button3OverRide)
+                if (DazStatics.baseDstore.Button3OverRide)
                 {
                     if (DazStatics.baseDstore.Button3ListOverRide == null)
                     {
@@ -274,7 +176,7 @@ namespace DazRscListSort
             }
             else if (num == 4)
             {
-                if (Button4OverRide)
+                if (DazStatics.baseDstore.Button4OverRide)
                 {
                     if (DazStatics.baseDstore.Button4ListOverRide == null)
                     {
@@ -293,7 +195,7 @@ namespace DazRscListSort
             }
             else if (num == 5)
             {
-                if (Button5OverRide)
+                if (DazStatics.baseDstore.Button5OverRide)
                 {
                     if (DazStatics.baseDstore.Button5ListOverRide == null)
                     {
@@ -355,7 +257,9 @@ namespace DazRscListSort
                     workingList.Insert(OldTagIndex + 1, tg);
                 }
             }
+            
             DazStatics.hdrButtonChangeInProgress = false; //reenabled PinnedResourcePanel.SortRows
+            DazStatics.ListRefreshRequired = true;
             PinnedResourcesPanel.Instance.Refresh(); //Refresh PinnedResourcePanel for new tag sort
         }
     }
@@ -375,27 +279,20 @@ namespace DazRscListSort
 
         public override void OnPointerClick(PointerEventData eventData) //on click event, save data and change page
         {
-           //DazRscListSortData dataStore = ClusterManager.Instance.activeWorld.GetComponent<DazRscListSort.DazRscListSortData>();
-            Debug.Log("Daz click! in world " + ClusterManager.Instance.activeWorldId);
-            if (eventData.button == PointerEventData.InputButton.Right)
+            if (eventData.button == PointerEventData.InputButton.Right && BtnNum == DazStatics.currentDstore.CurrentHdrButton)
             {
-                Debug.Log("Daz click RIGHT");
                 DazStatics.hdrButtonChangeInProgress = true; //disable PinnedResourcePanel.SortRows, will corrupt data if it runs during this method.
                 DazStatics.currentDstore.SanitizeList(); //must run before button number update next line!
                 DazStatics.SetOverRideButtonState(BtnNum);
                 DazStatics.UpdateGamePinned(DazStatics.currentDstore.GetCurrentList()); //must run after button number change line above
                 DazStatics.RscListRefreshHeader(); //updated header icons for new current list
                 DazStatics.hdrButtonChangeInProgress = false; //reenabled PinnedResourcePanel.SortRows
-
             }
             else
             {
-                
                 if (BtnNum != DazStatics.currentDstore.CurrentHdrButton)
                 {
                     DazStatics.hdrButtonChangeInProgress = true; //disable PinnedResourcePanel.SortRows, will corrupt data if it runs during this method.
-                    //DazStatics.UpdateRscList(BtnNum); //must be called before updated RscListCurrentID, updates our saved list for the old page before changing
-                    //DazStatics.ChangeDisplayedPage(dataStore.CurrentHdrButton, ClusterManager.Instance.activeWorldId, BtnNum, ClusterManager.Instance.activeWorldId);
                     DazStatics.currentDstore.SanitizeList(); //must run before button number update next line!
                     DazStatics.currentDstore.CurrentHdrButton = BtnNum; //change the current page
                     DazStatics.UpdateGamePinned(DazStatics.currentDstore.GetCurrentList()); //must run after button number change line above
@@ -404,6 +301,7 @@ namespace DazRscListSort
                 }
                 
             }
+            DazStatics.ListRefreshRequired = true;
         }
         
     }
@@ -439,12 +337,6 @@ namespace DazRscListSort
     public class SortBtn : Button
     {
         //Enable sort button
-        //public DazRscListSortData dStore;
-        public void Setup()
-        {
-            //dStore = ClusterManager.Instance.activeWorld.GetComponent<DazRscListSort.DazRscListSortData>();
-            //remove those method?
-        }
         public override void OnPointerClick(PointerEventData eventData)
         {
             if(!DazStatics.ShowSortArrows)
@@ -465,10 +357,12 @@ namespace DazRscListSort
         public static Dictionary<int, HdrBtn> hdrButtons = new Dictionary<int,HdrBtn>(); //Save our header button objects for easy reference
         public static bool hdrButtonChangeInProgress = false;//apparently ONI is multithreaded and the PinnedResourcesWindow can try to update in teh middle of a button change, if TRUE, PinnedResourcePanel.SortRows is locked out and will by bypassed to avoid conflicts
         public static bool init = false;
-        public static DazRscListSortData currentDstore;
-        public static DazRscListSortData baseDstore;
+        public static DazRscListSortData currentDstore; //current focus world
+        public static DazRscListSortData baseDstore; //always World 0 for override lists
         public static bool ShowSortArrows = false; //show sort arrows? reset this to false on world change
         public static Dictionary<Tag, GameObject> MiddleManRows; //middleman object to access private list in PinnedResourcesWindow class
+        public static bool ListRefreshRequired = false; //force manual list update after sort button clicked 1/2
+        public static bool ListRefreshComplete = false; //force manual list update after sort button clicked 2/2
 
         public static bool GetOverRideButtonState(int btnNum)
         {
@@ -592,96 +486,32 @@ namespace DazRscListSort
         }
         public static void GameStartDataLoad() //inital load of data from DataStore to static object as static object can't save across sessions
         {
-            Debug.Log("Daz static game start data load");
-
-                Debug.Log("Daz static game start static data init in world " + ClusterManager.Instance.activeWorldId);
                 //ClusterManager.Instance.activeWorld.FindOrAddComponent<DazRscListSort.DazRscListSortData>();
                 baseDstore = ClusterManager.Instance.GetWorld(0).FindOrAddComponent<DazRscListSort.DazRscListSortData>(); //always use world 0 for override data, not world we load into
             currentDstore = ClusterManager.Instance.GetWorld(ClusterManager.Instance.activeWorldId).FindOrAddComponent<DazRscListSort.DazRscListSortData>(); //get dStore of current world
             ShowSortArrows = false;
-
-            Debug.Log("Daz static game start static data init end");
         }
         public static void OnGameSpawn()
         {
-            Debug.Log("Daz game spawn");
             Game.Instance.Subscribe(1983128072, (System.Action<object>)(DazWorlds => OnWorldChanged()));
             
         }
 
-    
         public static void OnGameDeSpawn()
         {
-            Debug.Log("Daz game despawn");
             Game.Instance.Unsubscribe(1983128072, (System.Action<object>)(DazWorlds => OnWorldChanged()));
-            Debug.Log("Daz game despawn worked");
         }
         public static void OnWorldChanged()
         {
-            Debug.Log("Daz WORLD CHANGE id " + ClusterManager.Instance.activeWorldId);
             DazStatics.hdrButtonChangeInProgress = true;
-            currentDstore.SanitizeList();
+            currentDstore.SanitizeList(); //still old world's dstore
             currentDstore = ClusterManager.Instance.activeWorld.FindOrAddComponent<DazRscListSort.DazRscListSortData>();
+            currentDstore.Initialise(ClusterManager.Instance.activeWorldId); //needed if first time we've visited this world, check for this inside method
             DazStatics.UpdateGamePinned(currentDstore.GetCurrentList());
             DazStatics.RscListRefreshHeader(); //updated header icons for new current list
             DazStatics.hdrButtonChangeInProgress = false; //reenabled PinnedResourcePanel.SortRows
-            //DazRscListSortData newDstore = ClusterManager.Instance.activeWorld.FindOrAddComponent<DazRscListSort.DazRscListSortData>();
-            //ChangeDisplayedPage(currentDstore.CurrentHdrButton, currentDstore.WorldID, newDstore.CurrentHdrButton, newDstore.WorldID);
         }
 
-        //public static void ChangeDisplayedPage(int oldPage, int oldWorld, int newPage, int newWorld)
-        //{
-        //    DazRscListSortData oldDstore = ClusterManager.Instance.GetWorld(oldWorld).GetComponent<DazRscListSortData>();
-        //    DazRscListSortData newDstore = ClusterManager.Instance.GetWorld(newWorld).GetComponent<DazRscListSortData>();
-        //    WorldInventory newWorldInv = ClusterManager.Instance.GetWorld(newWorld).worldInventory;
-        //    WorldInventory oldWorldInv = ClusterManager.Instance.GetWorld(oldWorld).worldInventory;
-        //    List<Tag> newItems = new List<Tag>(); //don't want to save items tagged New, but can't remove while inside foreach
-        //    foreach (Tag tg in oldDstore.GetList(oldPage))
-        //    {
-        //        if (!oldWorldInv.pinnedResources.Contains(tg) && DiscoveredResources.Instance.newDiscoveries.ContainsKey(tg)) //discovered resources looks to be game-wide, not per asteroid
-        //        {
-        //            newItems.Add(tg);
-        //        }
-        //        oldWorldInv.pinnedResources.Remove(tg);//remove items tagged new from saved button list, does NOT remove them for Klei's new discoveries list so you can change buttons to add a new resource to a different page
-        //    }
-        //    foreach (Tag tg in newItems)
-        //    {
-        //        oldDstore.GetList(oldPage).Remove(tg); //remove items tagged new from saved list
-        //    }
-        //    foreach (Tag tg in newDstore.GetList(newPage)) //add saved tags from our new pages saved List<Tag>.
-        //    {
-        //        newWorldInv.pinnedResources.Add(tg);
-        //    }
-        //    PinnedResourcesPanel.Instance.Refresh(); //refresh the PinnedResourcesPanel for the new list of items.
-        //}
-        ////public static void UpdateRscList(int newList) //RscListCurrentID still holds old ID, changes between pages, not worlds
-        //{
-        //    //do not save current list, should already be saved when list was last updated
-        //    //clear list, this is direct copy of PinnedResourcePanel.UnPinAll(), but that method is private so can't call it
-        //    //rows list is private, can't access, so use our saved list as it should be the same, RscListCurrentID is still the old list, use it to remove
-        //    //note that we need to remove Tags not in pinned list, but in New Discoveries list from this button's List<Tag> before saving
-        //    WorldInventory worldInventory = ClusterManager.Instance.GetWorld(ClusterManager.Instance.activeWorldId).worldInventory; //get the current game data
-        //    DazRscListSort.DazRscListSortData dataStore = ClusterManager.Instance.activeWorld.GetComponent<DazRscListSort.DazRscListSortData>(); //get this mods datastorage object
-        //    List<Tag> newItems = new List<Tag>(); //don't want to save items tagged New, but can't remove while inside foreach
-        //    foreach (Tag tg in dataStore.GetList(dataStore.CurrentHdrButton))
-        //    {
-        //        if (!worldInventory.pinnedResources.Contains(tg) && DiscoveredResources.Instance.newDiscoveries.ContainsKey(tg))
-        //        {
-        //            newItems.Add(tg);
-        //        }
-        //        worldInventory.pinnedResources.Remove(tg);//remove items tagged new from saved button list, does NOT remove them for Klei's new discoveries list so you can change buttons to add a new resource to a different page
-        //    }
-        //    foreach(Tag tg in newItems)
-        //    {
-        //        dataStore.GetList(dataStore.CurrentHdrButton).Remove(tg); //remove items tagged new from saved list
-        //    }
-        //    foreach (Tag tg in dataStore.GetList(newList)) //add saved tags from our new pages saved List<Tag>.
-        //    {
-        //        worldInventory.pinnedResources.Add(tg);
-        //    }
-        //    PinnedResourcesPanel.Instance.Refresh(); //refresh the PinnedResourcesPanel for the new list of items.
-        //}
-        
         public static void UpdateGamePinned(List<Tag> savedList) //after page switch, purge and update game's built in tag list from list passed
         {
             List<Tag> pinnedRes = ClusterManager.Instance.activeWorld.worldInventory.pinnedResources;
@@ -691,38 +521,30 @@ namespace DazRscListSort
         }
         public static void RscListRefreshHeader() //refresh header button colors after page change
         {
-            Debug.Log("Daz refresh hdr A");
             foreach (int i in DazStatics.hdrButtons.Keys)
             {
-                Debug.Log("Daz refresh hdr b");
                 if (DazStatics.hdrButtons[i].BtnNum == currentDstore.CurrentHdrButton)
                 {
-                    Debug.Log("Daz refresh hdr c");
                     if (GetOverRideButtonState(i))
                     {
-                        Debug.Log("Daz refresh hdr d");
                         Image btnImg = DazStatics.hdrButtons[i].GetComponent<Image>();//set color cyan
                         btnImg.color = Color.magenta;
                     }
                     else
                     {
-                        Debug.Log("Daz refresh hdr e");
                         Image btnImg = DazStatics.hdrButtons[i].GetComponent<Image>();//set color green
                         btnImg.color = Color.green;
                     }
                 }
                 else
                 {
-                    Debug.Log("Daz refresh hdr f");
                     Image btnImg = DazStatics.hdrButtons[i].GetComponent<Image>(); //set color gray
                     btnImg.color = Color.gray;
                 }
             }
-            Debug.Log("Daz refresh hdr g");
         }
         public static List<Tag> SortRscList(List<Tag> OldList, Dictionary<Tag, GameObject> rows) //primary work done here, compare list and sort, call from PinnedResourceList with Harmony
         {
-            //Note this method REPLACES PinnedResourceWindow.SortRows in it's entirety, make sure it still does all the default Klei functions.
             List<Tag> ReturnList = new List<Tag>(); //have to add the inactive items back into list at end, so instatiate an object to modify and return
             if (DazStatics.hdrButtons.ContainsKey(1) && (DazStatics.hdrButtonChangeInProgress==false)) //race condition check, this method can run before buttons instantiate so skip if buttons don't exist yet
                 //also skip if button change in progress so that doesn't screw data up
@@ -735,7 +557,6 @@ namespace DazRscListSort
                         OldListActive.Add(row.Key); //make list of active only objects, includes NEW objects we don't want to save to sorted list
                     }
                 }
-                //DazRscListSort.DazRscListSortData dataStore = ClusterManager.Instance.activeWorld.GetComponent<DazRscListSort.DazRscListSortData>(); //get this mod's datastore, activeWorld is focus world
                 List<Tag> toRemove = new List<Tag>();
                 List<Tag> currentList = currentDstore.GetCurrentList();
                 foreach (Tag tag in currentList)  //check nothing has been removed from list by the game
@@ -750,7 +571,6 @@ namespace DazRscListSort
                 {
                     currentList.Remove(tg);
                 }
-
                 foreach (Tag tag in OldListActive) //check list to see if anythign new added to Klei's list.
                 {
                     if (!currentList.Contains(tag)) //missing tag from saved list in mod that exists in game list
@@ -772,7 +592,6 @@ namespace DazRscListSort
                     }
                 }
             }
-
             else //method had to be bypassed, most likely due to header button change in progress (see if statement)
             {
                 ReturnList = OldList;
@@ -814,7 +633,6 @@ namespace DazRscListSort
                 btnTfrm.SetParent(parent.transform, false); //set parent, false to use localspace
                 btn.GetComponent<KLayoutElement>().ignoreLayout = true; //not part of layout group
                 SortBtn btnImg = btn.GetComponent<SortBtn>(); //setup the button
-                btnImg.Setup(); //call Setup in button class, pass this button's number and the HdrBtn object
                 btnTfrm.sizeDelta = new Vector2(12, 12); //resize
                 btnTfrm.SetAsLastSibling(); //not 100% this is required
                 btnTfrm.Translate(new Vector3(posOffset, 0, 0)); //move button into place
@@ -881,8 +699,8 @@ namespace DazRscListSort
         {
             public static void Postfix()
             {
-                Debug.Log("Daz game OnSpawn harmony");
                 DazStatics.OnGameSpawn();
+                
             }
         }
         [HarmonyPatch(typeof(Game), "OnDestroy")]
@@ -890,7 +708,6 @@ namespace DazRscListSort
         {
             public static void Prefix()
             {
-                Debug.Log("Daz game OnDestroy harmony");
                 DazStatics.OnGameDeSpawn();
             }
         }
@@ -919,7 +736,6 @@ namespace DazRscListSort
             //use PostFix as no changes to panel, just adding stuff
             public static void Postfix(Dictionary<Tag, GameObject> ___rows)
             {
-                Debug.Log("Daz pinned rez onspawn");
                 DazStatics.SetupButton(PinnedResourcesPanel.Instance.headerButton.gameObject, 1, 55); //setup the 5 Page buttons on the header
                 DazStatics.SetupButton(PinnedResourcesPanel.Instance.headerButton.gameObject, 2, 71);
                 DazStatics.SetupButton(PinnedResourcesPanel.Instance.headerButton.gameObject, 3, 87);
@@ -930,11 +746,9 @@ namespace DazRscListSort
                 {
                     ClusterManager.Instance.activeWorld.GetComponent<DazRscListSort.DazRscListSortData>().CurrentHdrButton = 1;
                 }
-                ClusterManager.Instance.activeWorld.GetComponent<DazRscListSort.DazRscListSortData>().Initialise(); //call primary data object for setup
+                ClusterManager.Instance.activeWorld.GetComponent<DazRscListSort.DazRscListSortData>().Initialise(ClusterManager.Instance.activeWorldId); //call primary data object for setup
                 DazStatics.GameStartDataLoad();
-                Debug.Log("Daz pinned rez onspawn a");
                 DazStatics.RscListRefreshHeader(); //now have loaded, refresh button colors
-                Debug.Log("Daz pinned rez onspawn B");
 
                 DazStatics.SyncRows(___rows); //link rows object to primary data store
             }
@@ -951,6 +765,7 @@ namespace DazRscListSort
                 List<Tag> tagList = new List<Tag>(); //all items in ___rows
                 foreach (KeyValuePair<Tag, GameObject> row in ___rows)
                 {
+                    //Debug.Log("daz sortrows tag list start " + row.Key.Name);
                     tagList.Add(row.Key);
                 }
                 //end Klei code
@@ -964,8 +779,37 @@ namespace DazRscListSort
                 {
                     ___rows[key].transform.SetAsLastSibling();
                 }
+                
                 PinnedResourcesPanel.Instance.clearNewButton.transform.SetAsLastSibling();
                 PinnedResourcesPanel.Instance.seeAllButton.transform.SetAsLastSibling();
+                //new code below so manual reordering function works
+                if (DazStatics.ListRefreshRequired && !DazStatics.ListRefreshComplete) //i can not get LayerRebuilder.MarkLayoutForRebuild to work, so add and then remove a dummy game object to force list refresh
+                    //this IF statement runs over 2 consecutive list updates
+                {
+                    Transform placeHolder = PinnedResourcesPanel.Instance.seeAllButton.transform.parent.Find("DazPlaceHolder"); //does our dummy gameobject already exist?
+                    GameObject placeHoldergo;
+                    if (placeHolder == null)
+                    {
+                        //make dummy game object
+                        placeHoldergo = new GameObject("DazPlaceHolder", typeof(RectTransform), typeof(KLayoutElement));
+                        placeHoldergo.transform.SetParent(PinnedResourcesPanel.Instance.seeAllButton.transform.parent, false);
+                    }
+                    else
+                    {
+                        //dummy object exists, assign
+                        placeHoldergo = placeHolder.gameObject;
+                    }
+                    placeHoldergo.SetActive(true); //first step, make dummy object active so it's "in" the list, despite the player not seeing it
+                    placeHoldergo.transform.SetAsLastSibling(); //add to group, this forces list refresh
+                    DazStatics.ListRefreshComplete = true; //done, set true so else if below runs next List update
+                }
+                else if (DazStatics.ListRefreshComplete)
+                {
+                    //dummy obejct has done it's job, disable it until next sort action
+                    PinnedResourcesPanel.Instance.seeAllButton.transform.parent.Find("DazPlaceHolder").gameObject.SetActive(false); //have to find dummy object again, but we know it exists for sure
+                    DazStatics.ListRefreshComplete = false; //reset refresh state so it can be called again
+                    DazStatics.ListRefreshRequired = false;
+                }
                 //end of method, bypass original method with next line
                 return false;
             }
