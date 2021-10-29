@@ -5,6 +5,9 @@
 using KMod;
 using KSerialization;
 using System.Collections.Generic;
+using System.Collections;
+using System;
+using System.Reflection;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
@@ -55,7 +58,7 @@ namespace DazRscListSort
         //public static bool DazShowSortArrows = false;
         [Serialize]
         public int WorldID;
-
+        Component CritterInventoryComponent;
 
         //public static void SyncRows(Dictionary<Tag, GameObject> KlieRows) //called on PinnedResourcePanel.OnSpawn, this is the list of objects displayed in Pinned Resource Panel, use this reference to manipulated it, careful of race conditions
         //{
@@ -279,6 +282,7 @@ namespace DazRscListSort
 
         public override void OnPointerClick(PointerEventData eventData) //on click event, save data and change page
         {
+            DazStatics.SetupCritterInventoryLink(); //testing, remove!
             if (eventData.button == PointerEventData.InputButton.Right && BtnNum == DazStatics.currentDstore.CurrentHdrButton)
             {
                 DazStatics.hdrButtonChangeInProgress = true; //disable PinnedResourcePanel.SortRows, will corrupt data if it runs during this method.
@@ -363,6 +367,7 @@ namespace DazRscListSort
         public static Dictionary<Tag, GameObject> MiddleManRows; //middleman object to access private list in PinnedResourcesWindow class
         public static bool ListRefreshRequired = false; //force manual list update after sort button clicked 1/2
         public static bool ListRefreshComplete = false; //force manual list update after sort button clicked 2/2
+        public static bool CritterInventoryModInstalled = false;
 
         public static bool GetOverRideButtonState(int btnNum)
         {
@@ -486,22 +491,261 @@ namespace DazRscListSort
         }
         public static void GameStartDataLoad() //inital load of data from DataStore to static object as static object can't save across sessions
         {
-                //ClusterManager.Instance.activeWorld.FindOrAddComponent<DazRscListSort.DazRscListSortData>();
+            Debug.Log("Daz sync check, static load");
+            if(CritterInventoryModInstalled)
+            {
+                //SetupCritterInventoryLink();
+            }
                 baseDstore = ClusterManager.Instance.GetWorld(0).FindOrAddComponent<DazRscListSort.DazRscListSortData>(); //always use world 0 for override data, not world we load into
             currentDstore = ClusterManager.Instance.GetWorld(ClusterManager.Instance.activeWorldId).FindOrAddComponent<DazRscListSort.DazRscListSortData>(); //get dStore of current world
             ShowSortArrows = false;
         }
+
+        public static void SetupCritterInventoryLink() //reflection testing thing, called from HdrBtnClick
+        {
+            Debug.Log("daz critter inv setupA");
+            AppDomain currDomain = AppDomain.CurrentDomain;
+            Debug.Log("daz critter inv setupB");
+            Assembly[] assem = currDomain.GetAssemblies();
+            Debug.Log("daz critter inv setupC");
+            Assembly critterAssembly = null;
+            Type critterEnumType = null;
+            foreach (Assembly asm in assem)
+            {
+                //Debug.Log("Daz assembly " + (asm.GetName().ToString().Substring(0,14)));// + ":" + asm.CodeBase);
+                if (asm.GetName().ToString().Substring(0, 14) == "CritterInvento")
+                {
+                    critterAssembly = asm;
+                }
+            }
+            Debug.Log("daz critter inv setupC2");
+            if (critterAssembly != null)
+            {
+                foreach (Type typ in critterAssembly.GetTypes())
+                {
+                    //Debug.Log("Daz types " + typ.Name + "/" + typ.AssemblyQualifiedName);
+                    if (typ.Name == "CritterType")
+                    {
+                        critterEnumType = typ;
+                    }
+                }
+            }
+            Debug.Log("daz critter inv setupD");
+            // Type critterEnumType = Type.GetType("CritterInventory.CritterType, CritterInventory");
+            Debug.Log("daz critter inv setupe" + (critterEnumType == null));
+            foreach(FieldInfo fld in critterEnumType.GetFields())
+            {
+                Debug.Log("Daz enum fields " + fld.Name);
+            }
+            //Enum critTest = new critterEnumType.GetType() as Enum;
+            Debug.Log("daz enum check " + critterEnumType.GetType().IsEnum);
+            Debug.Log("Daz enum underlying " + critterEnumType);
+            Component CritterInv = new Component();
+            foreach (Component co in PinnedResourcesPanel.Instance.GetComponents(typeof(Component)))
+            {
+                Debug.Log("daz co name " + co.GetType());
+                if (co.GetType().ToString() == "PeterHan.CritterInventory.NewResourceScreen.PinnedCritterManager")
+                {
+                    Debug.Log("Daz reference found!");
+                    CritterInv = co;
+                }
+            }
+            Debug.Log("daz critter inv setup edn");
+
+            // Type critterTypeEnum = Type.GetType("CritterType");
+            Debug.Log("daz critter inv setup edn 1a");
+            //Debug.Log("daz critter inv setup edn 1a "+critterTypeEnum.GetType() );
+            FieldInfo memInfo = CritterInv.GetType().GetField("pinnedObjects", BindingFlags.Instance | BindingFlags.NonPublic);
+            Debug.Log("daz critter inv setup edn 1b");
+            //var critterInst = Activator.CreateInstance(critterEnumType);
+            Debug.Log("daz critter inv setup edn 1c");
+            //Debug.Log("daz critter inv setup edn 1d " + (critterInst == null));
+            object obj = memInfo.GetValue(CritterInv); //HierarchyReferences
+            //object[] arr = (object[])memInfo.GetType().InvokeMember("GetValues", BindingFlags.InvokeMethod|BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, memInfo, null);
+            Debug.Log("daz critter inv setup edn 2");
+            Debug.Log("daz critter inv setup edn 22" + obj.GetType());
+            IDictionary objDict = obj as IDictionary;
+            Debug.Log("Daz 222 check " + (objDict == null) + "?" + objDict.Count);
+            //foreach(string typ3 in critterEnumType.GetEnumValues)
+            //{
+            //    Debug.Log("Daz enum names " + typ3);
+            //}
+            Debug.Log("Daz dict " + objDict[critterEnumType.GetEnumValues().GetValue(1)].GetType());
+            IDictionary objDictval = (IDictionary)objDict[critterEnumType.GetEnumValues().GetValue(0)];
+            Debug.Log("Daz dic2t " + objDictval.Count+"?"+objDictval.GetType());
+
+            //Debug.Log("Daz dict null " + objDictval.Keys.);
+            foreach (Tag tg in objDictval.Keys)
+            {
+                Debug.Log("Daz sub dict cal " + tg.Name);
+            }
+            //foreach(KeyValuePair<object,object> kvp in objDict)
+            //{
+            //    Debug.Log("Daz dict " + kvp.Key.GetType() + "?" + kvp.Value.GetType());
+            //}
+            //SortedList<string, string> etest = new SortedList<string, string>();
+            //etest.
+            if (memInfo == null)
+            {
+                Debug.Log("Daz meminfo null");
+            }
+            else
+            {
+                Debug.Log("Daz meminfo not null");
+            }
+            Debug.Log("daz critter inv setup edn 3a");
+            //Type critterEnumType = memInfo.GetType().Assembly.GetType("CritterType");
+            //bool isDict = typeof(IDictionary<critterEnumType.GetType(),IDictionary<Tag,HierarchyReferences>>).IsAssignableFrom(memInfo.GetType());
+            //foreach (Type typ in memInfo.GetType().GetInterfaces())
+            //{
+            //    Debug.Log("daz ifaces " + typ.Name);
+            //}
+            //foreach(Attribute typ in memInfo.GetType().GetInterface("ICustomAttributeProvider").GetCustomAttributes())
+            //{
+            //    Debug.Log("Daz attrib " + typ.TypeId);
+            //}
+            Debug.Log("daz critter inv setup edn 3a3");
+            //var critterInst = Activator.CreateInstance(critterEnumType);
+            //if (isDict)
+            //{
+            //    Debug.Log("daz critter inv setup 3 assign okay");
+            //}
+            //else
+            //{
+            //    Debug.Log("daz critter inv setup 3 assign fail");
+            //}
+            //Debug.Log("Daz base enum? " + (memInfo as IEnumerator == null) + "??" + (memInfo as IEnumerable == null));
+            //foreach (Attribute attrib in memInfo.GetType().GetCustomAttributes())
+            //{
+            //    Debug.Log("Daz attribs " + attrib.TypeId + "?" + attrib.GetType() + "?" + attrib.ToString());
+            //}
+
+            //foreach (FieldInfo fld in memInfo.GetType().GetFields(BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public))
+            //{
+            //    Debug.Log("Daz sub fiels " + fld.GetType().IsEnum + "?" + fld.Name + " " + fld.GetType() + "?" + fld.FieldType + "?" + fld.GetUnderlyingType() + "?" + fld.FieldHandle.Value + (fld as IEnumerable == null)+ "??" + (fld as IEnumerator == null));
+            //}
+            //Debug.Log("daz critter inv setup edn 3b");
+            //foreach (PropertyInfo fld in memInfo.GetType().GetProperties(BindingFlags.Instance | BindingFlags.Static | BindingFlags.NonPublic | BindingFlags.Public))
+            //{
+            //    Debug.Log("Daz sub prop " + fld.Name + " " + fld.GetType() + " " + fld.PropertyType + "?" + fld.PropertyType.Name + "?" + (fld as IEnumerable == null) + "??" + (fld as IEnumerator==null));// + "?" + fld.GetCustomAttributes().);
+            //    //if(fld.Name== "FieldHandle")
+                //{
+                //    Debug.Log("Daz fieldhandle " + fld.PropertyType());
+                //}
+                //if (fld.Name == "FieldType")
+                //{
+                //    Debug.Log("Daz fieltype " + fld.GetType());
+                //}
+
+                //Debug.Log("Daz sub prop enum!" + fld.Name + " " + fld.GetType());
+
+            //}
+            //Debug.Log("Daz end enum check");
+            //foreach (MemberInfo fld in memInfo.GetType().GetMembers(BindingFlags.Instance | BindingFlags.Static | BindingFlags.NonPublic | BindingFlags.Public))
+            //{
+            //    Debug.Log("Daz sub mems " + fld.Name + " " + fld.GetType());
+            //}
+            //Debug.Log("daz critter inv setup edn 3c");
+            //foreach (Type itype in memInfo.GetType().GetInterfaces())
+            //{
+            //    Debug.Log("daz itypes " + itype.Name);
+            //}
+
+            //Debug.Log("Daz thingy " + memInfo.GetType().Assembly);
+            
+
+            //IEnumerator<object> objEnum = obj as IEnumerator<object>;
+            //if (objEnum == null)
+            //{
+            //    Debug.Log("Daz ENUM CAST FAIL");
+            //}
+            //else
+
+            //{
+            //    Debug.Log("Daz enum worked!");
+            //}
+
+
+
+            //IDictionary<typeof(critterEnumType), IDictionary<Tag, HierarchyReferences>> obj = (IDictionary < critterEnumType.GetType(), IDictionary < Tag, HierarchyReferences >> )memInfo.GetValue(CritterInv);
+            //if(CritterInv.GetType().IsGenericType)
+            //{
+            //    Debug.Log("daz crittertype is generic");
+            //}
+            Debug.Log("daz critter inv setup edn 3c3");
+            //if (CritterInv.GetType().GetGenericTypeDefinition() == typeof(IDictionary<,>))
+            //{
+            //    Debug.Log("daz crittertype is idict");
+            //}
+            //IDictionary<Enum, IDictionary<Tag, HierarchyReferences>> objList = obj as IDictionary<Enum, IDictionary<Tag, HierarchyReferences>>;
+            Debug.Log("daz critter inv setup edn 3c1");
+            //Debug.Log("daz dynamic"  + (IDictionary<Enum,IDictionary<Tag,HierarchyReferences>>)obj.count);
+            //objKeys = memInfo.GetType().GetProperty("Keys", BindingFlags.Instance | BindingFlags.Public).GetValue(memInfo);
+            //Debug.Log("daz critter inv setup edn 3d" + (objList == null));
+            //if (objKeys == null)
+            //{
+            //    Debug.Log("daz critter key null is null");
+            //}
+            //else
+            //{
+            //    Debug.Log("daz critter key not null " + obj.GetType());
+            //}
+            //if (obj == null)
+            //{
+            //    Debug.Log("daz critter null is null");
+            //}
+            //else
+            //{
+            //    Debug.Log("daz critter not null " + obj.GetType());
+            //}
+            Debug.Log("daz critter inv setup edn 4");
+            //IDictionary<var, CreatureVariationSoundEvent> objList = obj as IDictionary<CritterType, SortedList<Tag, HierarchyReferences>>;
+            //foreach(KeyValuePair<object, kvp in (SortedList<object,object>)obj)
+
+            //Debug.Log("daz critter inv setup edn 5");
+            //if (objList == null)
+            //{
+            //    Debug.Log("daz critter null is null");
+            //}
+            //else
+            //{
+            //    Debug.Log("daz critter not null " + obj.GetType());
+            //}
+            //Debug.Log("daz critter inv setup edn 6 " + objList.Count);
+
+        }
         public static void OnGameSpawn()
         {
-            Game.Instance.Subscribe(1983128072, (System.Action<object>)(DazWorlds => OnWorldChanged()));
-            
+            Debug.Log("daz statics onspawn");
+            CritterInvTest();
+            //Game.Instance.Subscribe(1983128072, (System.Action<object>)(DazWorlds => OnWorldChanged())); //works!!!
+            Game.Instance.Subscribe((int)GameHashes.ActiveWorldChanged, OnWorldChanged); //works!!!
+                                                                                                         // Game.Instance.Subscribe(1983128072, new EventSystem.IntraObjectHandler<Game>((System.Action<Game, object>)((component, data) => component.ForceOverlayUpdate(true))));
+            //Game.Instance.Subscribe((int)GameHashes.ActiveWorldChanged, new EventSystem.IntraObjectHandler<Game>((System.Action<Game, object>)((component, data) => OnWorldChangedTest3(data))));
+            //Game.Instance.Subscribe((int)GameHashes.ActiveWorldChanged, OnWorldChangedTest);
         }
 
+        public static void OnWorldChangedTest3(object obj)
+        {
+            Debug.Log("Daz World Change test 3");
+            Tuple<int, int> tuptest = (Tuple<int, int>)obj;
+            Debug.Log("Daz cast check " + tuptest.first + "/" + tuptest.second);
+        }
+        public static void OnWorldChangedTest(object obj)
+        {
+            Debug.Log("Daz worldchagnedtest!");
+
+        }
+        public static void CritterInvTest()
+        {
+            Debug.Log("daz critter test");
+            
+        }
         public static void OnGameDeSpawn()
         {
-            Game.Instance.Unsubscribe(1983128072, (System.Action<object>)(DazWorlds => OnWorldChanged()));
+            Game.Instance.Unsubscribe((int)GameHashes.ActiveWorldChanged);
         }
-        public static void OnWorldChanged()
+        public static void OnWorldChanged(object obj)
         {
             DazStatics.hdrButtonChangeInProgress = true;
             currentDstore.SanitizeList(); //still old world's dstore
@@ -545,6 +789,7 @@ namespace DazRscListSort
         }
         public static List<Tag> SortRscList(List<Tag> OldList, Dictionary<Tag, GameObject> rows) //primary work done here, compare list and sort, call from PinnedResourceList with Harmony
         {
+            
             List<Tag> ReturnList = new List<Tag>(); //have to add the inactive items back into list at end, so instatiate an object to modify and return
             if (DazStatics.hdrButtons.ContainsKey(1) && (DazStatics.hdrButtonChangeInProgress==false)) //race condition check, this method can run before buttons instantiate so skip if buttons don't exist yet
                 //also skip if button change in progress so that doesn't screw data up
@@ -552,10 +797,14 @@ namespace DazRscListSort
                 List<Tag> OldListActive = new List<Tag>();
                 foreach (KeyValuePair<Tag, GameObject> row in rows) //we only need to sort objects actively being displayed, there seems to be no destruction routine for objects that were shown and hidden and they stay around until game quit.
                 {
-                    if (row.Value.activeSelf) //is resource displayed?
-                    {
-                        OldListActive.Add(row.Key); //make list of active only objects, includes NEW objects we don't want to save to sorted list
-                    }
+                    //foreach(Transform trf in row.Value.transform.parent.transform)
+                    //{
+                    //    Debug.Log("Daz trf check: " + trf.name +"?" + trf.gameObject.name);
+                    //}
+                    //if (row.Value.activeSelf) //is resource displayed?
+                    //{
+                    //    OldListActive.Add(row.Key); //make list of active only objects, includes NEW objects we don't want to save to sorted list
+                    //}
                 }
                 List<Tag> toRemove = new List<Tag>();
                 List<Tag> currentList = currentDstore.GetCurrentList();
@@ -694,11 +943,54 @@ namespace DazRscListSort
     public class DazPatches : UserMod2 //mod loading class
     {
 
+        public override void OnAllModsLoaded(Harmony harmony, IReadOnlyList<Mod> mods)
+        {
+            foreach (Mod mod in mods)
+            {
+                if(mod.staticID== "PeterHan.CritterInventory") //is Critter Inventory mod loaded?
+                {
+                    Debug.Log("Pinned Resource List Extended: Critter Inventory Mod found!");
+                    DazStatics.CritterInventoryModInstalled = true;
+                }
+                Debug.Log("Daz mod check static id " + mod.staticID);
+                if(mod.staticID== "DazRscListSort")
+                {
+                    Debug.Log("Pinned Resource List Extended Version " + mod.packagedModInfo.version + " (By Daizo)");
+                }
+            }
+
+
+
+        }
+
+        //[HarmonyPatch(typeof(MainMenu), "OnSpawn")]
+        //public static class MainMenu_OnSpawn_Patch
+        //{
+        //    public static void Postfix()
+        //    {
+        //        Debug.Log("Daz Main Menu Test"  );
+        //        Assembly[] assem = AppDomain.CurrentDomain.GetAssemblies();
+        //        Debug.Log("daz critter inv setupC");
+        //        Assembly favoriteResources = null;
+        //        foreach (Assembly asm in assem)
+        //        {
+        //            Debug.Log("Daz assembly " + (asm.GetName().ToString()));// + ":" + asm.CodeBase);
+        //            if (asm.GetName().ToString().Substring(0, 30) == "Release_DLC1.Mod.FavoriteResou")
+        //            {
+        //                favoriteResources = asm;
+        //                Debug.Log("Daz assembly found!!!!! " + (asm.GetName().ToString()));
+        //            }
+        //        }
+        //        Global.Instance.modManager.NotifyDialog("MOD CONFLICT", "Pinned Resource Window extended\nand Favorite Resources do not work together. Please uninstall one.", Global.Instance.globalCanvas); //does not display, need SetlastSibling?
+
+        //    }
+        //}
         [HarmonyPatch(typeof(Game), "OnSpawn")]
         public static class Game_OnSpawn_Patch
         {
             public static void Postfix()
             {
+                Debug.Log("Pinned Resource List Extended v1.1.1");
                 DazStatics.OnGameSpawn();
                 
             }
