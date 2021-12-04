@@ -75,8 +75,12 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="DazButtons.cs" />
+    <Compile Include="DazPatches.cs" />
     <Compile Include="DazRscListSort.cs" />
+    <Compile Include="DazStatics.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="TagSourceItem.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
